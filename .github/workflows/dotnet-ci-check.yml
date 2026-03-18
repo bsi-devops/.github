@@ -5,6 +5,10 @@ on:
     branches: [ "main", "master" ]
   workflow_call: {}
 
+permissions:
+  contents: read
+  security-events: write
+
 jobs:
   build-test-and-security:
     runs-on: ubuntu-latest
