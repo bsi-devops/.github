@@ -1,0 +1,115 @@
+name: .NET Framework CI Check
+
+on:
+  pull_request:
+  merge_group:
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  build-test-and-security:
+    if: github.repository != 'bsi-devops/.github'
+    runs-on: windows-latest
+
+    steps:
+    # --- Checkout ---
+    - uses: actions/checkout@v4
+
+    # --- Setup NuGet ---
+    - name: Setup NuGet
+      uses: NuGet/setup-nuget@v2
+
+    # --- Setup MSBuild ---
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v2
+
+    # --- Restore ---
+    - name: Restore dependencies
+      shell: pwsh
+      run: |
+        $solutions = Get-ChildItem -Path . -Filter *.sln -Recurse
+
+        if (-not $solutions) {
+          throw "No solution files (*.sln) found."
+        }
+
+        foreach ($solution in $solutions) {
+          nuget restore $solution.FullName
+        }
+
+    # --- CodeQL Init ---
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v3
+      with:
+        languages: csharp
+
+    # --- Build ---
+    - name: Build
+      shell: pwsh
+      run: |
+        $solutions = Get-ChildItem -Path . -Filter *.sln -Recurse
+
+        if (-not $solutions) {
+          throw "No solution files (*.sln) found."
+        }
+
+        foreach ($solution in $solutions) {
+          msbuild $solution.FullName /m /p:Configuration=Release
+        }
+
+    # --- Test ---
+    - name: Test
+      shell: pwsh
+      run: |
+        $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer\vswhere.exe'
+        $vstest = & $vswhere -latest -products * -find 'Common7\IDE\CommonExtensions\Microsoft\TestWindow\vstest.console.exe'
+
+        if (-not $vstest) {
+          throw "vstest.console.exe was not found."
+        }
+
+        $testAssemblies = Get-ChildItem -Path . -Recurse -Include *Tests.dll,*Test.dll |
+          Where-Object {
+            $_.FullName -notmatch '\\obj\\' -and
+            $_.FullName -notmatch '\\ref\\' -and
+            $_.FullName -notmatch '\\packages\\'
+          }
+
+        if (-not $testAssemblies) {
+          Write-Host 'No test assemblies found. Skipping test execution.'
+          exit 0
+        }
+
+        & $vstest $testAssemblies.FullName
+
+    # --- CodeQL Analyze ---
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v3
+
+    # --- Dependabot Alerts ---
+    - name: Check Dependabot alerts
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const alerts = await github.request('GET /repos/{owner}/{repo}/dependabot/alerts', {
+            owner: context.repo.owner,
+            repo: context.repo.repo
+          });
+          if (alerts.data.length > 0) {
+            core.setFailed(`There are ${alerts.data.length} open Dependabot alerts`);
+          }
+
+    # --- Secret Scanning Alerts ---
+    - name: Check Secret Scanning alerts
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const alerts = await github.request('GET /repos/{owner}/{repo}/secret-scanning/alerts', {
+            owner: context.repo.owner,
+            repo: context.repo.repo
+          });
+          if (alerts.data.some(a => a.state === "open")) {
+            core.setFailed("Open secret scanning alerts found");
+          }
