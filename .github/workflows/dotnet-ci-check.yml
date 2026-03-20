@@ -2,8 +2,11 @@ name: .NET CI Check
 
 on:
   pull_request:
-    branches: [ "main", "master" ]
-  workflow_call: {}
+  merge_group:
+
+permissions:
+  contents: read
+  security-events: write
 
 permissions:
   contents: read
@@ -11,6 +14,7 @@ permissions:
 
 jobs:
   build-test-and-security:
+    if: github.repository != 'bsi-devops/.github'
     runs-on: ubuntu-latest
 
     steps:
