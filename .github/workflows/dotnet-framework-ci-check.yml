@@ -11,7 +11,9 @@ permissions:
 jobs:
   build-test-and-security:
     if: github.repository != 'bsi-devops/.github'
-    runs-on: windows-latest
+    runs-on:
+      group: On-Prem Windows Runners
+      labels: [self-hosted, Windows]
 
     steps:
     # --- Checkout ---
