@@ -8,6 +8,11 @@ on:
         required: true
         type: string
 
+      dotnet-quality:
+              type: string
+              required: false
+              default: 'ga'
+
       runner-group:
         description: "Runner group name"
         required: true
@@ -55,6 +60,7 @@ jobs:
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: ${{ inputs.dotnet-version }}
+        dotnet-quality: ${{ inputs.dotnet-quality }}
 
     # --- Restore ---
     - name: Restore dependencies
