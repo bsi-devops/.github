@@ -76,7 +76,7 @@ jobs:
 
     # --- Test ---
     - name: Test
-      run: dotnet test --no-build --verbosity normal
+      run: dotnet test --verbosity normal
 
     # --- CodeQL Init ---
     - name: Initialize CodeQL
