@@ -62,44 +62,31 @@ jobs:
         dotnet-version: ${{ inputs.dotnet-version }}
         dotnet-quality: ${{ inputs.dotnet-quality }}
 
-    # --- CodeQL Init (build előtt kötelező) ---
+    # --- CodeQL Init (FONTOS: build előtt) ---
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v3
       with:
         languages: csharp
 
-    # 🔥 --- CI solution generálás (mert nem bír slnx-ből dolgozni, ha az van a projektben) ---
-    - name: Generate CI solution
-      run: |
-        dotnet new sln -n ci
-        SLN="$PWD/ci.sln"
-
-        find "$PWD" -name "*.csproj" \
-          -not -path "*/obj/*" \
-          -not -path "*/bin/*" | while read proj; do
-            dotnet sln "$SLN" add "$proj"
-          done
-
-    # --- Debug info (később kivenni!) ---  
-    - run: |
-        pwd
-        ls -la
-
     # --- Restore ---
     - name: Restore dependencies
-      run: dotnet restore ci.sln
+      run: dotnet restore
 
     # --- Linting ---
     - name: Check Formatting (Linting)
       run: dotnet format --verify-no-changes
 
-    # --- Build (CodeQL ezt capture-eli) ---
-    - name: Build
-      run: dotnet build ci.sln --no-restore --configuration Release
+    # 🔥 --- Build ALL PROJECTS (CodeQL kompatibilis) ---
+    - name: Build (all projects)
+      run: |
+        find . -name "*.csproj" \
+          -not -path "*/obj/*" \
+          -not -path "*/bin/*" \
+          -exec dotnet build {} --configuration Release --no-restore \;
 
     # --- Test ---
     - name: Test
-      run: dotnet test ci.sln --configuration Release --no-build --verbosity normal
+      run: dotnet test --configuration Release --no-build --verbosity normal
 
     # --- CodeQL Analyze ---
     - name: Perform CodeQL Analysis
