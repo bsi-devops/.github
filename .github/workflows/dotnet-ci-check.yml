@@ -72,7 +72,9 @@ jobs:
     - name: Generate CI solution
       run: |
         dotnet new sln -n ci
-        find . -name "*.csproj" -not -path "*/obj/*" -not -path "*/bin/*" -print0 | xargs -0 dotnet sln ci.sln add
+        for proj in $(find . -name "*.csproj" -not -path "*/obj/*" -not -path "*/bin/*"); do
+          dotnet sln ci.sln add "$proj"
+        done
 
     # --- Restore ---
     - name: Restore dependencies
