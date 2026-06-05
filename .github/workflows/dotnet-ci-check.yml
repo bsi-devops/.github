@@ -9,9 +9,9 @@ on:
         type: string
 
       dotnet-quality:
-              type: string
-              required: false
-              default: 'ga'
+        type: string
+        required: false
+        default: 'ga'
 
       runner-group:
         description: "Runner group name"
@@ -50,10 +50,10 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
 
+    # --- .NET install dir fix ---
     - name: Set writable .NET install dir
-      shell: pwsh
-      run: |
-        "DOTNET_INSTALL_DIR=$(Join-Path $env:RUNNER_TEMP 'dotnet')" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+      shell: bash
+      run: echo "DOTNET_INSTALL_DIR=$RUNNER_TEMP/dotnet" >> $GITHUB_ENV
 
     # --- Setup .NET ---
     - name: Setup .NET
@@ -62,31 +62,33 @@ jobs:
         dotnet-version: ${{ inputs.dotnet-version }}
         dotnet-quality: ${{ inputs.dotnet-quality }}
 
-    # --- Restore ---
-    - name: Restore dependencies
-      run: dotnet restore
-
-    # --- Linting ---
-    - name: Check Formatting (Linting)
-      run: dotnet format --verify-no-changes
-
-    # --- Build ---
-    - name: Build
-      run: dotnet build --no-restore --configuration Release
-
-    # --- Test ---
-    - name: Test
-      run: dotnet test --verbosity normal
-
-    # --- CodeQL Init ---
+    # --- CodeQL Init (build előtt kötelező) ---
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v3
       with:
         languages: csharp
 
-    # --- CodeQL Build (manual) ---
-    - name: Build for CodeQL
-      run: dotnet build --configuration Release --no-restore
+    # 🔥 --- CI solution generálás (mert nem bír slnx-ből dolgozni, ha az van a projektben) ---
+    - name: Generate CI solution
+      run: |
+        dotnet new sln -n ci
+        find . -name "*.csproj" -not -path "*/obj/*" -not -path "*/bin/*" -print0 | xargs -0 dotnet sln ci.sln add
+
+    # --- Restore ---
+    - name: Restore dependencies
+      run: dotnet restore ci.sln
+
+    # --- Linting ---
+    - name: Check Formatting (Linting)
+      run: dotnet format --verify-no-changes
+
+    # --- Build (CodeQL ezt capture-eli) ---
+    - name: Build
+      run: dotnet build ci.sln --no-restore --configuration Release
+
+    # --- Test ---
+    - name: Test
+      run: dotnet test ci.sln --configuration Release --no-build --verbosity normal
 
     # --- CodeQL Analyze ---
     - name: Perform CodeQL Analysis
