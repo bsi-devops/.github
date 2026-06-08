@@ -36,6 +36,7 @@ on:
         type: boolean
 
 permissions:
+  actions: read
   contents: read
   security-events: write
 
