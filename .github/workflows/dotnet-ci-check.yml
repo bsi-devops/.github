@@ -35,6 +35,12 @@ on:
         default: true
         type: boolean
 
+    
+    secrets:
+      SECURITY_REPORTS_APP_PRIVATE_KEY:
+        description: "GitHub App private key"
+        required: true
+
 permissions:
   actions: read
   contents: read
