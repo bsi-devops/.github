@@ -112,11 +112,21 @@ jobs:
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
 
+    # --- Generate GitHub App token ---
+    - name: Generate GitHub App token
+      id: app-token
+      uses: actions/create-github-app-token@v2
+      with:
+        app-id: ${{ vars.SECURITY_REPORTS_APP_ID }}
+        private-key: ${{ secrets.SECURITY_REPORTS_APP_PRIVATE_KEY }}
+
     # --- Dependabot Alerts ---
+
     - name: Check Dependabot alerts
       if: inputs.fail-on-dependabot-alerts
       uses: actions/github-script@v7
       with:
+        github-token: ${{ steps.app-token.outputs.token }}
         script: |
           const alerts = await github.request(
             'GET /repos/{owner}/{repo}/dependabot/alerts',
@@ -126,12 +136,13 @@ jobs:
           if (alerts.data.length > 0) {
             core.setFailed(`There are ${alerts.data.length} open Dependabot alerts`);
           }
-
+            
     # --- Secret Scanning Alerts ---
     - name: Check Secret Scanning alerts
       if: inputs.fail-on-secret-scanning-alerts
       uses: actions/github-script@v7
       with:
+        github-token: ${{ steps.app-token.outputs.token }}
         script: |
           const alerts = await github.request(
             'GET /repos/{owner}/{repo}/secret-scanning/alerts',

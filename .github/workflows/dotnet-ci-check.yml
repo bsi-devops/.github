@@ -94,6 +94,15 @@ jobs:
       if: github.event_name != 'pull_request'
       uses: github/codeql-action/analyze@v3
 
+    # --- Generate GitHub App token (non-PR only) ---
+    - name: Generate GitHub App token
+      if: github.event_name != 'pull_request'
+      id: app-token
+      uses: actions/create-github-app-token@v2
+      with:
+        app-id: ${{ vars.SECURITY_REPORTS_APP_ID }}
+        private-key: ${{ secrets.SECURITY_REPORTS_APP_PRIVATE_KEY }}
+
     # =============================
     # 🔥 Dependabot fallback
     # =============================
@@ -103,6 +112,7 @@ jobs:
       continue-on-error: true
       id: dependabot_check
       with:
+        github-token: ${{ github.event_name != 'pull_request' && steps.app-token.outputs.token || github.token }}
         script: |
           try {
             const alerts = await github.request(
@@ -114,7 +124,8 @@ jobs:
             core.setOutput("count", count);
             console.log(`Dependabot alerts: ${count}`);
           } catch (err) {
-            console.log("⚠️ Could not fetch Dependabot alerts (permission issue).");
+            console.log("⚠️ Could not fetch Dependabot alerts.");
+            console.log(err.status);
             core.setOutput("count", "unknown");
           }
 
@@ -135,6 +146,7 @@ jobs:
       continue-on-error: true
       id: secret_check
       with:
+        github-token: ${{ github.event_name != 'pull_request' && steps.app-token.outputs.token || github.token }}
         script: |
           try {
             const alerts = await github.request(
@@ -146,7 +158,8 @@ jobs:
             core.setOutput("count", openAlerts);
             console.log(`Open secret alerts: ${openAlerts}`);
           } catch (err) {
-            console.log("⚠️ Could not fetch secret scanning alerts (permission issue).");
+            console.log("⚠️ Could not fetch secret scanning alerts.");
+            console.log(err.status);
             core.setOutput("count", "unknown");
           }
 
