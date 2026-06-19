@@ -40,14 +40,8 @@ on:
       SECURITY_REPORTS_APP_PRIVATE_KEY:
         description: "GitHub App private key for security reports"
         required: true
-      
-      PACKAGES_APP_PRIVATE_KEY:
-        description: "GitHub App private key for packages"
-        required: true
-  
 
 permissions:
-  actions: read
   contents: read
   security-events: write
   packages: read
@@ -81,28 +75,16 @@ jobs:
       with:
         languages: csharp
 
-    
-    # --- Generate GitHub App token for Packages ---
-    - name: Generate Packages App token
-      id: packages-token
-      uses: actions/create-github-app-token@v2
-      with:
-        app-id: ${{ vars.PACKAGES_APP_ID }}
-        private-key: ${{ secrets.PACKAGES_APP_PRIVATE_KEY }}
-        owner: bsi-devops
-
     # --- Configure GitHub Packages NuGet source ---
     - name: Configure GitHub-BSI NuGet source
       shell: bash
-      env:
-        NUGET_AUTH_TOKEN: ${{ steps.packages-token.outputs.token }}
       run: |
         dotnet nuget remove source GitHub-BSI || true
 
         dotnet nuget add source "https://nuget.pkg.github.com/bsi-devops/index.json" \
           --name "GitHub-BSI" \
-          --username "x-access-token" \
-          --password "$NUGET_AUTH_TOKEN" \
+          --username ${{ github.actor }} \
+          --password ${{ secrets.GITHUB_TOKEN }} \
           --store-password-in-clear-text
 
     # --- Restore ---

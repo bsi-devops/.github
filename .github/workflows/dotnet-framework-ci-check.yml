@@ -28,13 +28,8 @@ on:
       SECURITY_REPORTS_APP_PRIVATE_KEY:
         description: "GitHub App private key for security reports"
         required: true 
-
-      PACKAGES_APP_PRIVATE_KEY:
-        description: "GitHub App private key for packages"
-        required: true
               
 permissions:
-  actions: read
   contents: read
   security-events: write
   packages: read
@@ -58,28 +53,17 @@ jobs:
     - name: Setup MSBuild
       uses: microsoft/setup-msbuild@v2
 
-    # --- Generate Packages App token ---
-    - name: Generate Packages App token
-      id: packages-token
-      uses: actions/create-github-app-token@v2
-      with:
-        app-id: ${{ vars.PACKAGES_APP_ID }}
-        private-key: ${{ secrets.PACKAGES_APP_PRIVATE_KEY }}
-        owner: bsi-devops
-
     # --- Configure GitHub-BSI NuGet source ---
     - name: Configure GitHub-BSI NuGet source
       shell: pwsh
-      env:
-        NUGET_AUTH_TOKEN: ${{ steps.packages-token.outputs.token }}
       run: |
         nuget sources Remove -Name "GitHub-BSI" -ErrorAction SilentlyContinue
 
         nuget sources Add `
           -Name "GitHub-BSI" `
           -Source "https://nuget.pkg.github.com/bsi-devops/index.json" `
-          -Username "x-access-token" `
-          -Password $env:NUGET_AUTH_TOKEN `
+          -Username ${{ github.actor }} `
+          -Password ${{ secrets.GITHUB_TOKEN }} `
           -StorePasswordInClearText
 
     # --- Restore ---
