@@ -65,6 +65,7 @@ jobs:
       with:
         app-id: ${{ vars.PACKAGES_APP_ID }}
         private-key: ${{ secrets.PACKAGES_APP_PRIVATE_KEY }}
+        owner: bsi-devops
 
     # --- Configure GitHub-BSI NuGet source ---
     - name: Configure GitHub-BSI NuGet source
