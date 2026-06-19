@@ -23,6 +23,12 @@ on:
         required: true
         type: string
 
+      format-workspace:
+        description: "Workspace path for dotnet format (optional override)"
+        required: false
+        default: ''
+        type: string
+
       fail-on-dependabot-alerts:
         description: "Fail if open Dependabot alerts exist"
         required: false
@@ -87,25 +93,91 @@ jobs:
           --password ${{ secrets.GITHUB_TOKEN }} \
           --store-password-in-clear-text
 
+    - name: Resolve .NET workspace
+      id: resolve_workspace
+      shell: bash
+      run: |
+        workspace="${{ inputs.format-workspace }}"
+
+        if [ -n "$workspace" ] && [ ! -e "$workspace" ]; then
+          echo "Configured format-workspace does not exist: $workspace"
+          exit 1
+        fi
+
+        if [ -z "$workspace" ]; then
+          slnx_count=$(find . -maxdepth 1 -type f -name "*.slnx" | wc -l)
+          sln_count=$(find . -maxdepth 1 -type f -name "*.sln" | wc -l)
+          csproj_count=$(find . -maxdepth 1 -type f -name "*.csproj" | wc -l)
+
+          if [ "$slnx_count" -gt 0 ]; then
+            workspace=$(find . -maxdepth 1 -type f -name "*.slnx" | sort | head -n 1)
+          elif [ "$sln_count" -gt 0 ]; then
+            workspace=$(find . -maxdepth 1 -type f -name "*.sln" | sort | head -n 1)
+          elif [ "$csproj_count" -eq 1 ]; then
+            workspace=$(find . -maxdepth 1 -type f -name "*.csproj" | head -n 1)
+          fi
+        fi
+
+        echo "workspace=$workspace" >> "$GITHUB_OUTPUT"
+
+        if [ -n "$workspace" ]; then
+          echo "Resolved workspace: $workspace"
+        else
+          echo "No explicit workspace resolved; dotnet default discovery will be used."
+        fi
+
     # --- Restore ---
     - name: Restore dependencies
-      run: dotnet restore
+      shell: bash
+      run: |
+        workspace="${{ steps.resolve_workspace.outputs.workspace }}"
+
+        if [ -n "$workspace" ]; then
+          dotnet restore "$workspace"
+        else
+          dotnet restore
+        fi
 
     # --- Linting ---
     - name: Check Formatting (Linting)
-      run: dotnet format --verify-no-changes
+      shell: bash
+      run: |
+        workspace="${{ steps.resolve_workspace.outputs.workspace }}"
+
+        if [ -n "$workspace" ]; then
+          echo "Running dotnet format on workspace: $workspace"
+          dotnet format "$workspace" --verify-no-changes
+        else
+          echo "No preferred workspace found, using default dotnet format discovery."
+          dotnet format --verify-no-changes
+        fi
 
     # --- Build ---
     - name: Build (all projects)
+      shell: bash
       run: |
-        find . -name "*.csproj" \
-          -not -path "*/obj/*" \
-          -not -path "*/bin/*" \
-          -exec dotnet build {} --configuration Release --no-restore \;
+        workspace="${{ steps.resolve_workspace.outputs.workspace }}"
+
+        if [ -n "$workspace" ]; then
+          dotnet build "$workspace" --configuration Release --no-restore
+        else
+          find . -name "*.csproj" \
+            -not -path "*/obj/*" \
+            -not -path "*/bin/*" \
+            -exec dotnet build {} --configuration Release --no-restore \;
+        fi
 
     # --- Test ---
     - name: Test
-      run: dotnet test --configuration Release --no-build --verbosity normal
+      shell: bash
+      run: |
+        workspace="${{ steps.resolve_workspace.outputs.workspace }}"
+
+        if [ -n "$workspace" ]; then
+          dotnet test "$workspace" --configuration Release --no-build --verbosity normal
+        else
+          dotnet test --configuration Release --no-build --verbosity normal
+        fi
 
     # 🔥 CodeQL (PR-ben skip → nincs permission error)
     - name: Perform CodeQL Analysis
