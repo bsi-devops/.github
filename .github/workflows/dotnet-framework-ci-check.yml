@@ -77,7 +77,7 @@ jobs:
         nuget sources Add `
           -Name "GitHub-BSI" `
           -Source "https://nuget.pkg.github.com/bsi-devops/index.json" `
-          -Username "github" `
+          -Username "x-access-token" `
           -Password $env:NUGET_AUTH_TOKEN `
           -StorePasswordInClearText
 
