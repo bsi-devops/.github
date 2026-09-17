@@ -57,15 +57,30 @@ jobs:
     # --- Configure GitHub-BSI NuGet source ---
     - name: Configure GitHub-BSI NuGet source
       shell: pwsh
+      env:
+        NUGET_USERNAME: ${{ github.actor }}
+        NUGET_PASSWORD: ${{ github.token }}
       run: |
-        nuget sources Remove -Name "GitHub-BSI" -ErrorAction SilentlyContinue
+        $sourceName = "GitHub-BSI"
+        $sourceUrl = "https://nuget.pkg.github.com/bsi-devops/index.json"
+        $sourceArguments = @(
+          "-Name", $sourceName,
+          "-Source", $sourceUrl,
+          "-Username", $env:NUGET_USERNAME,
+          "-Password", $env:NUGET_PASSWORD,
+          "-StorePasswordInClearText",
+          "-NonInteractive"
+        )
 
-        nuget sources Add `
-          -Name "GitHub-BSI" `
-          -Source "https://nuget.pkg.github.com/bsi-devops/index.json" `
-          -Username ${{ github.actor }} `
-          -Password ${{ secrets.GITHUB_TOKEN }} `
-          -StorePasswordInClearText
+        nuget sources Update @sourceArguments
+
+        if ($LASTEXITCODE -ne 0) {
+          nuget sources Add @sourceArguments
+        }
+
+        if ($LASTEXITCODE -ne 0) {
+          throw "Failed to configure the '$sourceName' NuGet source."
+        }
 
     # --- Restore ---
     - name: Restore dependencies
