@@ -1,0 +1,56 @@
+name: Hiba
+description: Használd, ha valami nem működik vagy hibásan működik a projektben.
+title: "[Hiba]: "
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Rövid leírás
+      description: Foglald össze egy-két mondatban a problémát.
+      placeholder: Mi a gond?
+    validations:
+      required: true
+  - type: textarea
+    id: affected-files
+    attributes:
+      label: Érintett fájlok vagy komponensek
+      description: Sorold fel, mely fájlok, projektek vagy modulok érintettek.
+      placeholder: |
+        - src/<projekt>/<fájl>
+        - docs/<oldal>.md
+        - .github/workflows/<workflow>.yml
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Mi a probléma
+      description: Írd le, miért hibás vagy félrevezető a jelenlegi viselkedés.
+      placeholder: Miért probléma ez?
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Javasolt megoldás
+      description: Mit kellene máshogy csinálni?
+      placeholder: Mit javasolsz helyette?
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Elfogadási kritériumok
+      description: Mikor tekinthető késznek az issue megoldása?
+      placeholder: |
+        - ...
+        - ...
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Megjegyzés
+      description: Ha van commit, screenshot vagy további kontextus, ide írd.
+    validations:
+      required: false

@@ -1,0 +1,49 @@
+name: Refactor
+description: Kódszerkezet javítása funkcionális változás nélkül
+title: "[Refactor]: "
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Rövid leírás
+      placeholder: Mit kell refaktorálni?
+    validations:
+      required: true
+
+  - type: textarea
+    id: current
+    attributes:
+      label: Jelenlegi állapot
+      description: Mi a probléma a jelenlegi implementációval?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed
+    attributes:
+      label: Javasolt megoldás
+      description: Hogyan kellene átalakítani?
+    validations:
+      required: true
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: Hatás
+      description: Milyen részeket érint?
+      placeholder: |
+        - modulok
+        - API-k
+        - függőségek
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Elfogadási kritériumok
+      placeholder: |
+        - ...
+        - ...
+    validations:
+      required: true

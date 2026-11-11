@@ -1,0 +1,49 @@
+name: Feature
+description: Új funkció vagy fejlesztési igény
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Rövid leírás
+      description: Foglald össze a javasolt feature-t.
+      placeholder: Mit szeretnél bevezetni?
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Milyen problémát old meg?
+      description: Mi indokolja az új funkciót?
+      placeholder: Miért van rá szükség?
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Javasolt megoldás
+      description: Hogyan működjön a feature?
+      placeholder: Írd le részletesen az elképzelést.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatívák
+      description: Vizsgáltatok más megoldásokat?
+    validations:
+      required: false
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Elfogadási kritériumok
+      placeholder: |
+        - ...
+        - ...
+    validations:
+      required: true
