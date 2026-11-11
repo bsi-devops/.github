@@ -1,0 +1,52 @@
+name: Chore
+description: Karbantartási feladat (dependency frissítés, kód tisztítás, CI/CD, stb.)
+title: "[Chore]: "
+labels: ["maintenance"]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Rövid leírás
+      description: Foglald össze, mi a karbantartási feladat.
+      placeholder: Mit kell elvégezni?
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: Hatókör
+      description: Mely fájlok, modulok vagy függőségek érintettek?
+      placeholder: |
+        - Függőségek (pl. NuGet, npm csomagok)
+        - .github/workflows/...
+        - Konfigurációs fájlok
+    validations:
+      required: true
+
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Motiváció
+      description: Miért szükséges ez a feladat?
+      placeholder: Mi indokolja a változtatást?
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Elfogadási kritériumok
+      placeholder: |
+        - ...
+        - ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Megjegyzés
+      description: Ha van további kontextus, ide írd.
+    validations:
+      required: false
